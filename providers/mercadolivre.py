@@ -15,6 +15,15 @@ logger = logging.getLogger(__name__)
 
 ID_REGEX = re.compile(r"(MLB-?\d{6,})", re.IGNORECASE)
 
+# Sem isso, alguns encurtadores (ex: meli.la) bloqueiam a requisição por
+# parecer tráfego de bot, mesmo só seguindo redirect.
+_HEADERS = {
+    "User-Agent": (
+        "Mozilla/5.0 (Linux; Android 13; SM-G991B) AppleWebKit/537.36 "
+        "(KHTML, like Gecko) Chrome/124.0.0.0 Mobile Safari/537.36"
+    )
+}
+
 
 def extrair_item_id(texto: str) -> str | None:
     """Extrai o item_id de uma mensagem, seguindo redirect se for link curto."""
@@ -27,7 +36,9 @@ def extrair_item_id(texto: str) -> str | None:
         return None
 
     try:
-        resp = requests.get(url_match.group(0), allow_redirects=True, timeout=10)
+        resp = requests.get(
+            url_match.group(0), headers=_HEADERS, allow_redirects=True, timeout=10
+        )
         match = ID_REGEX.search(resp.url)
         if match:
             return _normaliza(match.group(1))
